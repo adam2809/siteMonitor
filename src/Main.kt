@@ -1,3 +1,4 @@
 fun main(args:Array<String>) {
-    println("siema")
+    val argsMap = args.toList().windowed(2).map { (a,b) -> a to b }
+    println(argsMap)
 }
