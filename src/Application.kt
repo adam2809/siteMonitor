@@ -2,7 +2,6 @@ import java.io.*
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
-import kotlin.concurrent.timer
 import kotlin.system.exitProcess
 
 class Application(args: Array<String>) {
@@ -20,9 +19,7 @@ class Application(args: Array<String>) {
 
         argsMap["-a"]?.let(::addNewWebsiteToTracking)
 
-//        timer(period=interval*1000){
-//
-//        }
+        Timer().scheduleAtFixedRate(TrackerTimerTask(),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){
