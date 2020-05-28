@@ -22,7 +22,7 @@ class Application(args: Array<String>) {
         val interval = props.getProperty("interval").toLong()
         val websitesToTrack = props.getProperty("trackedWebsites").split(",").map(::URL)
 
-        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack),0,interval*1000)
+        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){
@@ -32,7 +32,13 @@ class Application(args: Array<String>) {
             println("The URL of the website you wanted to add is invalid.")
         }
 
-        val newPropVal = "${props.getProperty("trackedWebsites")},${urlStr}"
+        val currPropVal = props.getProperty("trackedWebsites")
+        val newPropVal = if(currPropVal == null){
+            urlStr
+        }else{
+            "${currPropVal},${urlStr}"
+        }
+
         props.setProperty("trackedWebsites",newPropVal)
     }
 
