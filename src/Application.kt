@@ -5,21 +5,24 @@ import java.util.*
 import kotlin.system.exitProcess
 
 class Application(args: Array<String>) {
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    private val propsFileURL: URL = Application::class.java.classLoader.getResource("app.properties")
+    private val props  = FileInputStream(File(propsFileURL.toURI())).use {
+        Properties().apply { load(it) }
+    }
 
     init {
         val argsMap:Map<String,String> = args.toList().windowed(2).map { (a,b) -> a to b }.toMap()
 
-        val interval:Long
-        try {
-            interval = argsMap["-i"]?.toLong() ?: 10
-        }catch(e:NumberFormatException){
-            println("The interval value is not in the correct format. Please use a number format.")
-            exitProcess(1)
-        }
-
         argsMap["-a"]?.let(::addNewWebsiteToTracking)
+        argsMap["-i"]?.let(::changeIntervalProperty)
 
-        Timer().scheduleAtFixedRate(TrackerTimerTask(),0,interval*1000)
+        props.store(FileOutputStream(File(propsFileURL.toURI())),null)
+
+        val interval = props.getProperty("interval").toLong()
+        val websitesToTrack = props.getProperty("trackedWebsites").split(",").map(::URL)
+
+        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){
@@ -29,16 +32,19 @@ class Application(args: Array<String>) {
             println("The URL of the website you wanted to add is invalid.")
         }
 
-
-        val propsFileURL = Application::class.java.classLoader.getResource("app.properties")
-        val props  = FileInputStream(File(propsFileURL.toURI())).use {
-            Properties().apply { load(it) }
-        }
-
         val newPropVal = "${props.getProperty("trackedWebsites")},${urlStr}"
         props.setProperty("trackedWebsites",newPropVal)
+    }
 
-        props.store(FileOutputStream(File(propsFileURL.toURI())),null)
+    private fun changeIntervalProperty(newValStr:String){
+        try {
+            newValStr.toInt()
+        }catch(e:NumberFormatException){
+            println("The interval value is not in the correct format. Please use a number format.")
+            exitProcess(1)
+        }
+
+        props.setProperty("interval",newValStr)
     }
 
     private fun test(s:String):String{
