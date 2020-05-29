@@ -4,7 +4,8 @@ import java.util.*
 
 class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): TimerTask() {
 
-    private var ticks = 0
+    private var last1MinutePrint = System.currentTimeMillis()
+    private var last10MinutePrint = System.currentTimeMillis()
 
     private val dataPoints:Map<URL,MutableList<TrackerDataPoint>> = websitesToTrack.map { it to mutableListOf<TrackerDataPoint>() }.toMap()
     private val maxDataPoints = 3600/interval
@@ -13,8 +14,6 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): Tim
         updateDataPoints()
 
         printInfoIfNeeded()
-
-        ticks++
     }
 
     private fun updateDataPoints(){
@@ -35,21 +34,28 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): Tim
     }
 
     private fun printInfoIfNeeded() {
-        val elapsedTime = (ticks*interval).toInt()
+        val currTime = System.currentTimeMillis()
         when{
-            elapsedTime % 10 == 0 -> println("Printing stats of all websites for the past 10 minutes\n" +
-                                              getInfo(600 / interval))
-            elapsedTime % 60 == 0 -> println("Printing stats of all websites for the past 1 hour\n" +
-                                              getInfo(3600 / interval))
+            currTime - last1MinutePrint > 60000 -> println("Printing stats of all websites for the past 10 minutes (${Date()})\n" +
+            getInfo(600 / interval)).also {
+                last1MinutePrint=currTime
+            }
+
+            currTime - last10MinutePrint > 600000 -> println("Printing stats of all websites for the past 1 hour (${Date()})\n" +
+            getInfo(3600 / interval)).also {
+                last10MinutePrint=currTime
+            }
         }
     }
 
     private fun getInfo(dataPointsCount:Int):String{
         return dataPoints.entries.joinToString("\n") { (url, data) ->
             val relevantDataPoints = data.takeLast(dataPointsCount)
-            val availability = relevantDataPoints.filter { it.responseCode.toString().startsWith("2") }
+            val availability = relevantDataPoints.filter { it.responseCode.toString().startsWith("2") }.let {
+                (it.size / relevantDataPoints.size) * 100
+            }
             val avgResponseTime = relevantDataPoints.sumBy { it.responseTime.toInt() } / relevantDataPoints.size
-            "Stats for $url: availability=$availability average_response_time=$avgResponseTime"
+            "Stats for $url: availability=$availability% average_response_time=$avgResponseTime"
         }
     }
 }
