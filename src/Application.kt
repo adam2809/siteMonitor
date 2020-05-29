@@ -22,10 +22,11 @@ class Application(args: Array<String>) {
         val interval = props.getProperty("interval").toLong()
         val websitesToTrack = props.getProperty("trackedWebsites").split(",").map(::URL)
 
-        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval),0,interval*1000)
+        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval.toInt()),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){
+//        TODO don't add websites that are already there
         try {
             URL(urlStr.let(::test))
         }catch (e:MalformedURLException){
