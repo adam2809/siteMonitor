@@ -54,12 +54,12 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): Tim
         val currTime = System.currentTimeMillis()
         when{
             currTime - last1MinutePrint > 60000 -> println("Printing stats of all websites for the past 10 minutes (${Date()})\n" +
-            getInfo(600 / interval)).also {
+                    getInfo(600 / interval)).also {
                 last1MinutePrint=currTime
             }
 
             currTime - last10MinutePrint > 600000 -> println("Printing stats of all websites for the past 1 hour (${Date()})\n" +
-            getInfo(3600 / interval)).also {
+                    getInfo(3600 / interval)).also {
                 last10MinutePrint=currTime
             }
         }

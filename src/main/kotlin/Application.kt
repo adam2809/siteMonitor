@@ -20,27 +20,40 @@ class Application(args: Array<String>) {
         props.store(FileOutputStream(File(propsFileURL.toURI())),null)
 
         val interval = props.getProperty("interval").toLong()
-        val websitesToTrack = props.getProperty("trackedWebsites").split(",").map(::URL)
+        val websitesToTrack = props.getProperty("trackedWebsites").also{
+            if(it.isEmpty()){
+                println("Please add a website to tracking using the -a flag.")
+                exitProcess(1)
+            }
+        }.split(",").map(::URL)
 
         Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval.toInt()),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){
 //        TODO don't add websites that are already there
+        val urlWithProtocol = addProtocolIfNeeded(urlStr)
         try {
-            URL(urlStr.let(::test))
+            URL(urlWithProtocol)
         }catch (e:MalformedURLException){
             println("The URL of the website you wanted to add is invalid.")
         }
 
         val currPropVal = props.getProperty("trackedWebsites")
-        val newPropVal = if(currPropVal == null){
-            urlStr
+        val newPropVal = if(currPropVal == null || currPropVal.isEmpty()){
+            urlWithProtocol
         }else{
-            "${currPropVal},${urlStr}"
+            "${currPropVal},${urlWithProtocol}"
         }
 
         props.setProperty("trackedWebsites",newPropVal)
+    }
+
+    private fun addProtocolIfNeeded(s:String):String{
+        if(!(s.startsWith("https://") || s.startsWith("http://"))){
+            return "https://$s"
+        }
+        return s
     }
 
     private fun changeIntervalProperty(newValStr:String){
@@ -52,12 +65,5 @@ class Application(args: Array<String>) {
         }
 
         props.setProperty("interval",newValStr)
-    }
-
-    private fun test(s:String):String{
-        if(!(s.startsWith("https://") || s.startsWith("http://"))){
-            return "https://$s"
-        }
-        return s
     }
 }
