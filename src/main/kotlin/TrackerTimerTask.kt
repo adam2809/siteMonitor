@@ -1,5 +1,4 @@
 import availabilitycheckers.URLAvailabilityChecker
-import java.net.HttpURLConnection
 import java.util.*
 import java.net.URL as URL
 
@@ -16,7 +15,7 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int, priv
     override fun run() {
         updateDataPoints()
 
-        if(dataPoints.values.first().size > 120 / interval){
+        if(dataPoints.values.first().size >= 120 / interval){
             alertIfNeeded()
         }
 
