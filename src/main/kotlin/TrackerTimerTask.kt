@@ -1,6 +1,6 @@
 import java.net.HttpURLConnection
-import java.net.URL
 import java.util.*
+import java.net.URL as URL
 
 class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): TimerTask() {
 
