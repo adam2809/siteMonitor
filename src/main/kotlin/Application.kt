@@ -1,3 +1,4 @@
+import availabilitycheckers.HttpURLAvailabilityChecker
 import java.io.*
 import java.net.MalformedURLException
 import java.net.URL
@@ -27,7 +28,7 @@ class Application(args: Array<String>) {
             }
         }.split(",").map(::URL)
 
-        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval.toInt()),0,interval*1000)
+        Timer().scheduleAtFixedRate(TrackerTimerTask(websitesToTrack,interval.toInt(),HttpURLAvailabilityChecker()),0,interval*1000)
     }
 
     private fun addNewWebsiteToTracking(urlStr:String){

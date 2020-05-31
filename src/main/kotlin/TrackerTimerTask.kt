@@ -1,8 +1,9 @@
+import availabilitycheckers.URLAvailabilityChecker
 import java.net.HttpURLConnection
 import java.util.*
 import java.net.URL as URL
 
-class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): TimerTask() {
+class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int, private val checker: URLAvailabilityChecker): TimerTask() {
 
     private var last1MinutePrint = System.currentTimeMillis()
     private var last10MinutePrint = System.currentTimeMillis()
@@ -29,11 +30,7 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int): Tim
             }
 
             val requestStartTime = System.currentTimeMillis()
-            var responseCode:Int?
-
-            with(url.openConnection() as HttpURLConnection){
-                responseCode = this.responseCode
-            }
+            val responseCode:Int? = checker.checkStatusCode(url)
 
             data.add(TrackerDataPoint(responseCode,System.currentTimeMillis()-requestStartTime))
         }
