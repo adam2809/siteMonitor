@@ -7,7 +7,7 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int, priv
     private var last1MinutePrint = System.currentTimeMillis()
     private var last10MinutePrint = System.currentTimeMillis()
 
-    private val currRaisedAlerts = mutableListOf<URL>()
+    private val currRaisedAlerts = mutableSetOf<URL>()
 
     private val dataPoints:Map<URL,MutableList<TrackerDataPoint>> = websitesToTrack.map { it to mutableListOf<TrackerDataPoint>() }.toMap()
     private val maxDataPoints = 3600/interval
@@ -17,6 +17,7 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int, priv
 
         if(dataPoints.values.first().size >= 120 / interval){
             alertIfNeeded()
+            alertRecoveryIfNeeded()
         }
 
         printInfoIfNeeded()
@@ -37,11 +38,28 @@ class TrackerTimerTask(websitesToTrack:List<URL>, private val interval:Int, priv
 
     private fun alertIfNeeded(){
         dataPoints.entries.forEach { (url,data) ->
+            if(url in currRaisedAlerts){
+                return
+            }
             val relevantData = data.takeLast(120/interval)
             val availability = getAvailability(relevantData)
             if (availability<80){
                 currRaisedAlerts.add(url)
                 println("Website $url is down. availability=$availability, time=${Date()}")
+            }
+        }
+    }
+
+    private fun alertRecoveryIfNeeded(){
+        dataPoints.entries.forEach { (url,data) ->
+            if(url !in currRaisedAlerts){
+                return
+            }
+            val relevantData = data.takeLast(120/interval)
+            val availability = getAvailability(relevantData)
+            if(availability >= 80){
+                currRaisedAlerts.remove(url)
+                println("Website $url is back up. availability=$availability, time=${Date()}")
             }
         }
     }
